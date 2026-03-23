@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1A2B1A">
+<title>Wimborne Historic Town Trail | Superspree RouteLoop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════
+   WIMBORNE HISTORIC TOWN TRAIL · DESIGN SYSTEM
+   Heritage palette: Deep teal / Parchment / Gold
+   Awe: Vastness + Connectedness at every stop
+═══════════════════════════════════════════════════ */
+:root {
+  --teal:       #1A4A40;   /* deep heritage teal */
+  --teal-mid:   #236152;
+  --teal-lt:    #2E7A65;
+  --gold:       #C8922A;
+  --gold-lt:    #E8B84B;
+  --parchment:  #F4EDD8;
+  --parch-mid:  #EAE0C4;
+  --parch-dark: #D9CBAA;
+  --ink:        #1C1A14;
+  --sepia:      #5C4A28;
+  --stone:      #7A7060;
+  --cream:      #FDFAF2;
+  --success:    #2E6B3E;
+  --ss-teal:    #00B4B0;
+  --red:        #C0392B;
+
+  --display-font: 'Playfair Display', Georgia, serif;
+  --body-font:    'Source Sans 3', sans-serif;
+
+  --radius-sm: 8px;
+  --radius:    14px;
+  --radius-lg: 22px;
+  --shadow:    0 3px 16px rgba(28,26,20,0.13);
+  --shadow-lg: 0 8px 32px rgba(28,26,20,0.22);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--body-font);
+  background:var(--ink);
+  color:var(--ink);
+  display:flex;flex-direction:column;
+  height:100dvh;max-width:430px;margin:0 auto;
+  position:relative;overflow:hidden;
+}
+
+/* ══ SCREENS ══ */
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+
+/* ════════════════════════════════════
+   HOME SCREEN
+════════════════════════════════════ */
+#screen-home{
+  background:var(--teal);
+  position:relative;overflow:hidden;
+}
+.home-bg-pattern{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.home-bg-pattern svg{width:100%;height:100%;opacity:0.06}
+
+.home-inner{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  flex:1;padding:0 22px 24px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.home-inner::-webkit-scrollbar{display:none}
+
+/* Header row */
+.home-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:22px;padding-bottom:6px;
+}
+.wtoc-badge{
+  width:56px;height:56px;
+  background:var(--gold);
+  border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:3px solid rgba(255,255,255,0.2);flex-shrink:0;
+}
+.wtoc-badge-top{font-family:var(--body-font);font-weight:700;font-size:6.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.2}
+.wtoc-badge-yr{font-family:var(--display-font);font-weight:700;font-size:16px;color:var(--ink);line-height:1}
+.wtoc-badge-bot{font-family:var(--body-font);font-weight:600;font-size:5.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.3}
+
+.ss-wordmark{display:flex;align-items:center;gap:7px}
+.ss-icon{width:32px;height:32px;background:var(--ss-teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--display-font);font-weight:700;font-size:15px;color:#fff}
+.ss-name{font-size:12px;font-weight:600;color:var(--ss-teal);letter-spacing:0.5px}
+.ss-sub{font-size:8.5px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+
+/* Ornamental divider */
+.home-ornament{display:flex;align-items:center;gap:10px;margin:16px auto;opacity:0.5}
+.home-ornament-line{flex:1;height:1px;background:var(--gold-lt)}
+.home-ornament-diamond{width:8px;height:8px;background:var(--gold-lt);transform:rotate(45deg);flex-shrink:0}
+
+/* Awe hero — Vastness framing */
+.home-eyebrow{font-size:9.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold-lt);margin-bottom:10px;text-align:center}
+.home-title{font-family:var(--display-font);font-size:32px;font-weight:700;line-height:1.15;color:#fff;margin-bottom:8px;text-align:center}
+.home-title .hl{color:var(--gold-lt)}
+.home-subtitle{font-size:11px;font-weight:500;color:rgba(255,255,255,0.5);margin-bottom:18px;font-style:italic;text-align:center;letter-spacing:0.3px}
+
+/* Awe intro card */
+.home-awe-card{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(200,146,42,0.25);
+  border-radius:var(--radius);
+  padding:16px 18px;margin-bottom:20px;
+  text-align:center;
+}
+.home-awe-icon{font-size:28px;margin-bottom:8px;display:block}
+.home-awe-text{font-size:13.5px;line-height:1.65;color:rgba(255,255,255,0.82)}
+.home-awe-text strong{color:var(--gold-lt);font-weight:600}
+
+/* Trail stats strip */
+.home-stats{display:flex;gap:10px;margin-bottom:20px}
+.home-stat{
+  flex:1;background:rgba(255,255,255,0.08);
+  border-radius:var(--radius-sm);padding:11px 8px;text-align:center;
+}
+.home-stat-val{font-family:var(--display-font);font-size:22px;font-weight:700;color:var(--gold-lt);line-height:1}
+.home-stat-lbl{font-size:9.5px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px}
+
+/* Planet Wimborne badge */
+.home-planet{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.06);border-radius:var(--radius-sm);
+  padding:10px 14px;margin-bottom:18px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.home-planet-icon{font-size:20px;flex-shrink:0}
+.home-planet-text{font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.5}
+.home-planet-text strong{color:rgba(255,255,255,0.85);font-weight:600}
+
+/* Buttons */
+.btn-primary{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  color:var(--ink);font-family:var(--body-font);font-size:15px;font-weight:700;
+  border:none;border-radius:var(--radius-lg);cursor:pointer;
+  letter-spacing:0.3px;transition:opacity 0.15s;
+  margin-bottom:10px;
+}
+.btn-primary:active{opacity:0.88}
+.btn-secondary{
+  width:100%;padding:13px;
+  background:rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.85);font-family:var(--body-font);font-size:14px;font-weight:600;
+  border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-lg);cursor:pointer;
+  transition:opacity 0.15s;margin-bottom:8px;
+}
+.btn-secondary:active{opacity:0.75}
+.nfc-hint{font-size:11px;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px;letter-spacing:0.2px}
+
+/* ════════════════════════════════════
+   MAP SCREEN
+════════════════════════════════════ */
+#screen-map{background:var(--cream)}
+.map-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px 12px;
+  background:var(--teal);
+  flex-shrink:0;
+}
+.icon-btn{
+  width:38px;height:38px;border:none;border-radius:50%;
+  background:rgba(255,255,255,0.15);color:#fff;font-size:17px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background 0.15s;
+}
+.icon-btn:active{background:rgba(255,255,255,0.3)}
+.map-title{flex:1}
+.map-title h2{font-size:15px;font-weight:700;color:#fff;font-family:var(--display-font)}
+.map-title p{font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px}
+#map-container{flex:1;position:relative}
+#leaflet-map{width:100%;height:100%}
+.map-legend{
+  position:absolute;bottom:16px;left:12px;z-index:1000;
+  background:rgba(255,255,255,0.94);border-radius:10px;
+  padding:8px 12px;box-shadow:var(--shadow);
+}
+.legend-items{display:flex;flex-direction:column;gap:5px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sepia);font-weight:500}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ════════════════════════════════════
+   NFC LANDING SCREEN
+════════════════════════════════════ */
+#screen-nfc{
+  background:var(--teal);
+  align-items:center;justify-content:center;
+  text-align:center;padding:30px 24px;
+  position:relative;overflow:hidden;
+}
+.nfc-bg-ring{
+  position:absolute;width:280px;height:280px;
+  border:2px solid rgba(200,146,42,0.15);border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:ringPulse 3s ease-in-out infinite;
+}
+.nfc-bg-ring-2{
+  position:absolute;width:380px;height:380px;
+  border:1px solid rgba(200,146,42,0.08);border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:ringPulse 3s ease-in-out infinite 0.8s;
+}
+@keyframes ringPulse{0%,100%{opacity:0.4;transform:translate(-50%,-50%) scale(0.95)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
+.nfc-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(0,180,176,0.2);border:1px solid rgba(0,180,176,0.4);
+  border-radius:30px;padding:6px 14px;
+  font-size:11px;font-weight:600;color:var(--ss-teal);
+  margin-bottom:24px;letter-spacing:0.5px;
+}
+.nfc-scan-anim{font-size:52px;margin-bottom:16px;animation:scanBob 2s ease-in-out infinite}
+@keyframes scanBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.nfc-you-are{font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:6px}
+.nfc-location-name{font-family:var(--display-font);font-size:26px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.2}
+.nfc-location-meta{font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:4px}
+.nfc-location-addr{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:16px}
+.nfc-type-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:rgba(200,146,42,0.2);color:var(--gold-lt);border:1px solid rgba(200,146,42,0.3);margin-bottom:24px}
+.nfc-progress-ring-wrap{margin-bottom:12px}
+.nfc-progress-ring-bg{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:3}
+.nfc-progress-ring-fg{fill:none;stroke:var(--gold-lt);stroke-width:3;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);stroke-dasharray:138;stroke-dashoffset:138;transition:stroke-dashoffset 0.1s linear}
+.nfc-tap-hint{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:20px}
+.nfc-btn-now{
+  padding:13px 32px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  color:var(--ink);font-family:var(--body-font);font-size:14px;font-weight:700;
+  border:none;border-radius:var(--radius-lg);cursor:pointer;
+  margin-bottom:28px;
+}
+.nfc-wtoc-row{display:flex;align-items:center;gap:10px}
+.nfc-wtoc-mini{background:var(--gold);border-radius:50%;width:38px;height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.nfc-wtoc-mini-yr{font-family:var(--display-font);font-size:10px;font-weight:700;color:var(--ink);line-height:1}
+.nfc-wtoc-mini-txt{font-size:5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.2}
+.nfc-wtoc-label{font-size:11px;color:rgba(255,255,255,0.45);font-style:italic}
+
+/* ════════════════════════════════════
+   SITE SCREEN
+════════════════════════════════════ */
+#screen-site{background:var(--parchment)}
+.return-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  cursor:pointer;flex-shrink:0;
+}
+.return-bar.hidden{display:none}
+.return-bar-icon{font-size:16px}
+.return-bar-text{flex:1;font-size:12.5px;font-weight:700;color:var(--ink)}
+.return-bar-action{
+  padding:5px 12px;background:rgba(28,26,20,0.18);
+  color:var(--ink);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
+}
+
+.site-topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px 11px;background:var(--teal);flex-shrink:0;
+}
+.site-num{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--gold);
+  font-family:var(--display-font);font-size:17px;font-weight:700;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.site-topbar-info{flex:1;min-width:0}
+.site-topbar-info h2{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--display-font)}
+.site-topbar-info p{font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:1px}
+
+.progress-track{
+  display:flex;gap:3px;padding:6px 16px;
+  background:var(--teal);flex-shrink:0;
+}
+.progress-dot{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.15);transition:background 0.3s}
+.progress-dot.done{background:var(--gold)}
+.progress-dot.active{background:var(--gold-lt)}
+
+.site-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.site-scroll::-webkit-scrollbar{display:none}
+
+/* Site hero — awe framing */
+.site-hero{
+  background:linear-gradient(180deg,var(--teal) 0%,var(--teal-mid) 60%,var(--parchment) 100%);
+  padding:22px 20px 28px;text-align:center;position:relative;
+}
+.site-hero-num-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(200,146,42,0.2);border:1px solid rgba(200,146,42,0.4);
+  border-radius:20px;padding:4px 12px;margin-bottom:12px;
+  font-size:11px;font-weight:700;color:var(--gold-lt);letter-spacing:1.5px;text-transform:uppercase;
+}
+.site-hero-icon{font-size:44px;margin-bottom:10px;display:block}
+.site-hero-name{font-family:var(--display-font);font-size:26px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px}
+.site-hero-addr{font-size:11.5px;color:rgba(255,255,255,0.5);font-style:italic;margin-bottom:0}
+
+/* Plaque badge */
+.plaque-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  margin:14px auto 0;
+  padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+}
+.plaque-badge.green{background:#e6f4ea;color:#1e6b35;border:1px solid #a8d5b5}
+.plaque-badge.blue{background:#e3edf8;color:#1a4a8a;border:1px solid #a0bede}
+
+.site-body{padding:18px 18px 24px}
+
+/* Awe pull-quote */
+.awe-quote{
+  background:linear-gradient(135deg,var(--teal),var(--teal-mid));
+  border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;
+  border-left:4px solid var(--gold);
+}
+.awe-quote-text{font-family:var(--display-font);font-size:14.5px;font-style:italic;color:#fff;line-height:1.7;margin-bottom:6px}
+.awe-quote-attr{font-size:10.5px;color:rgba(255,255,255,0.45);letter-spacing:0.5px}
+
+/* Content prose */
+.site-prose{margin-bottom:20px}
+.site-prose p{font-size:14px;line-height:1.75;color:var(--sepia);margin-bottom:12px}
+.site-prose p:last-child{margin-bottom:0}
+.site-prose strong{color:var(--ink);font-weight:700}
+.site-prose em{color:var(--teal-mid);font-style:italic}
+
+/* Did you know */
+.did-you-know{
+  background:var(--parch-mid);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:18px;
+  border:1px solid var(--parch-dark);
+}
+.dyk-label{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.dyk-text{font-size:13px;line-height:1.65;color:var(--sepia)}
+
+/* Links */
+.site-links{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.site-link{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;background:#fff;border-radius:var(--radius-sm);
+  border:1px solid var(--parch-dark);text-decoration:none;
+  transition:background 0.15s;
+}
+.site-link:active{background:var(--parch-mid)}
+.site-link-icon{font-size:16px;flex-shrink:0}
+.site-link-text{flex:1;font-size:13px;font-weight:600;color:var(--teal);line-height:1.3}
+.site-link-arrow{font-size:13px;color:var(--stone)}
+
+/* Navigation section */
+.nav-section{
+  background:var(--teal);border-radius:var(--radius);
+  padding:16px 18px;margin-bottom:18px;
+}
+.nav-section-label{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:12px}
+.nav-steps{display:flex;flex-direction:column;gap:0}
+.nav-step{display:flex;gap:12px;padding:8px 0}
+.nav-step-col{display:flex;flex-direction:column;align-items:center}
+.nav-dot{width:22px;height:22px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink);flex-shrink:0}
+.nav-vline{flex:1;width:2px;background:rgba(255,255,255,0.1);margin:3px 0}
+.nav-step-text{padding-top:3px;padding-bottom:6px}
+.nav-step-text strong{font-size:13px;font-weight:700;color:#fff;display:block;margin-bottom:2px}
+.nav-step-text span{font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.5}
+.nav-dist{display:inline-block;margin-top:4px;padding:2px 8px;background:rgba(255,255,255,0.1);border-radius:10px;font-size:10px;color:rgba(255,255,255,0.55);font-weight:600}
+
+.btn-next{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-lt));
+  color:#fff;font-family:var(--body-font);font-size:15px;font-weight:700;
+  border:none;border-radius:var(--radius-lg);cursor:pointer;
+  margin-bottom:8px;letter-spacing:0.3px;
+}
+.btn-next:active{opacity:0.88}
+.btn-map-link{
+  width:100%;padding:12px;
+  background:rgba(26,74,64,0.1);color:var(--teal);
+  font-family:var(--body-font);font-size:13.5px;font-weight:600;
+  border:1px solid rgba(26,74,64,0.2);border-radius:var(--radius-lg);cursor:pointer;
+}
+
+/* Return to car directions overlay */
+.return-overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(26,26,20,0.6);backdrop-filter:blur(4px);
+  align-items:flex-end;
+}
+.return-overlay.open{display:flex}
+.return-sheet{
+  width:100%;max-width:430px;margin:0 auto;
+  background:var(--cream);border-radius:22px 22px 0 0;
+  padding:20px 18px 32px;max-height:75vh;overflow-y:auto;
+  scrollbar-width:none;
+}
+.return-sheet::-webkit-scrollbar{display:none}
+.return-sheet-handle{width:36px;height:4px;background:var(--parch-dark);border-radius:2px;margin:0 auto 16px}
+.return-sheet h3{font-family:var(--display-font);font-size:18px;font-weight:700;color:var(--teal);margin-bottom:4px}
+.return-sheet-sub{font-size:12px;color:var(--stone);margin-bottom:16px}
+
+/* Car park selection overlay */
+.cp-overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(26,26,20,0.6);backdrop-filter:blur(4px);
+  align-items:flex-end;
+}
+.cp-overlay.open{display:flex}
+.cp-sheet{
+  width:100%;max-width:430px;margin:0 auto;
+  background:var(--cream);border-radius:22px 22px 0 0;
+  padding:20px 18px 32px;max-height:80vh;overflow-y:auto;
+  scrollbar-width:none;
+}
+.cp-sheet::-webkit-scrollbar{display:none}
+.cp-handle{width:36px;height:4px;background:var(--parch-dark);border-radius:2px;margin:0 auto 16px}
+.cp-sheet h3{font-family:var(--display-font);font-size:18px;font-weight:700;color:var(--teal);margin-bottom:4px}
+.cp-sheet-sub{font-size:12px;color:var(--stone);margin-bottom:16px}
+.cp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.cp-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px;background:#fff;border-radius:var(--radius);
+  border:2px solid var(--parch-dark);cursor:pointer;transition:border-color 0.15s;
+}
+.cp-item.selected{border-color:var(--teal);background:rgba(26,74,64,0.04)}
+.cp-icon{width:36px;height:36px;border-radius:9px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.cp-info h4{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.cp-info p{font-size:11.5px;color:var(--stone)}
+.cp-dist{font-size:11px;font-weight:700;color:var(--teal);margin-left:auto;flex-shrink:0}
+.cp-confirm-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-lt));
+  color:#fff;border:none;border-radius:var(--radius-lg);
+  font-size:15px;font-weight:700;cursor:pointer;
+}
+.cp-confirm-btn:disabled{opacity:0.4;cursor:default}
+
+/* Car park screen */
+#screen-carpark{background:var(--parchment)}
+.cp-screen-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;background:var(--teal);flex-shrink:0;
+}
+.cp-screen-header h2{font-family:var(--display-font);font-size:16px;font-weight:700;color:#fff;flex:1}
+.cp-screen-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px 32px;scrollbar-width:none}
+.cp-screen-scroll::-webkit-scrollbar{display:none}
+.cp-welcome-card{background:var(--teal);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+.cp-welcome-card h3{font-family:var(--display-font);font-size:16px;color:#fff;margin-bottom:6px}
+.cp-welcome-card p{font-size:13px;line-height:1.65;color:rgba(255,255,255,0.7)}
+.cp-dir-card{background:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.cp-dir-card h3{font-size:14px;font-weight:700;color:var(--teal);margin-bottom:14px}
+.dir-step{display:flex;gap:12px;margin-bottom:4px}
+.dir-dot{width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dir-dot.dest{background:var(--gold)}
+.dir-vline{width:2px;background:var(--parch-dark);height:18px;margin:3px auto 0}
+.dir-text{flex:1;padding:3px 0 12px}
+.dir-text strong{font-size:13px;color:var(--ink);display:block;margin-bottom:2px}
+.dir-text span{font-size:11.5px;color:var(--stone);line-height:1.5}
+.dir-badge{display:inline-block;margin-top:5px;padding:2px 8px;background:var(--parch-mid);border-radius:10px;font-size:10.5px;color:var(--sepia)}
+
+/* ════════════════════════════════════
+   COMPLETE SCREEN
+════════════════════════════════════ */
+#screen-complete{
+  background:linear-gradient(160deg,var(--teal) 0%,var(--teal-mid) 50%,#0e2f28 100%);
+  align-items:center;justify-content:center;
+  text-align:center;padding:30px 24px;overflow-y:auto;
+  scrollbar-width:none;
+}
+#screen-complete::-webkit-scrollbar{display:none}
+.complete-icon{font-size:60px;margin-bottom:16px;animation:completePop 0.6s ease-out}
+@keyframes completePop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.complete-headline{font-family:var(--display-font);font-size:32px;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.2}
+.complete-headline .hl{color:var(--gold-lt)}
+.complete-sub{font-size:14px;line-height:1.7;color:rgba(255,255,255,0.65);max-width:320px;margin:0 auto 24px}
+.complete-awe-box{
+  background:rgba(255,255,255,0.07);border:1px solid rgba(200,146,42,0.3);
+  border-radius:var(--radius);padding:18px;margin-bottom:24px;max-width:360px;
+  text-align:left;
+}
+.complete-awe-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-lt);font-weight:700;margin-bottom:8px}
+.complete-awe-para{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,0.78);font-family:var(--display-font);font-style:italic}
+.complete-stats{display:flex;gap:12px;margin-bottom:24px}
+.complete-stat{flex:1;background:rgba(255,255,255,0.07);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.complete-stat-val{font-family:var(--display-font);font-size:24px;font-weight:700;color:var(--gold-lt)}
+.complete-stat-lbl{font-size:9.5px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px}
+
+/* Dir steps reuse for return-sheet */
+.ret-steps{display:flex;flex-direction:column;gap:0}
+
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div id="screen-home" class="screen active">
+  <div class="home-bg-pattern">
+    <svg viewBox="0 0 400 800" xmlns="http://www.w3.org/2000/svg">
+      <!-- Heritage cross-hatch pattern -->
+      <defs><pattern id="hatch" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><line x1="0" y1="0" x2="0" y2="40" stroke="#C8922A" stroke-width="0.8"/></pattern></defs>
+      <rect width="400" height="800" fill="url(#hatch)"/>
+      <!-- Decorative diamond row -->
+      <g fill="#C8922A">
+        <rect x="180" y="60" width="8" height="8" transform="rotate(45 184 64)"/>
+        <rect x="200" y="60" width="8" height="8" transform="rotate(45 204 64)"/>
+        <rect x="220" y="60" width="8" height="8" transform="rotate(45 224 64)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="home-inner">
+    <div class="home-header">
+      <div class="wtoc-badge">
+        <div class="wtoc-badge-top">Wimborne</div>
+        <div class="wtoc-badge-yr">2026</div>
+        <div class="wtoc-badge-bot">Town of<br>Culture</div>
+      </div>
+      <div class="ss-wordmark">
+        <div class="ss-icon">S</div>
+        <div>
+          <div class="ss-name">Superspree</div>
+          <div class="ss-sub">RouteLoop</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-ornament">
+      <div class="home-ornament-line"></div>
+      <div class="home-ornament-diamond"></div>
+      <div class="home-ornament-line"></div>
+    </div>
+
+    <div class="home-eyebrow">Wimborne Town of Culture 2026</div>
+    <h1 class="home-title">Wimborne<br><span class="hl">Historic Town</span><br>Trail</h1>
+    <p class="home-subtitle">Discover the stories written in stone</p>
+
+    <div class="home-awe-card">
+      <span class="home-awe-icon">🏛️</span>
+      <p class="home-awe-text">
+        <strong>1,300 years of history</strong> await you in these streets. Saxon kings, notorious smugglers, celebrated poets, and pioneering reformers — all left their mark on Wimborne, and all connected to the place you are standing right now.
+      </p>
+    </div>
+
+    <div class="home-stats">
+      <div class="home-stat">
+        <div class="home-stat-val">13</div>
+        <div class="home-stat-lbl">Stops</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-val">~90</div>
+        <div class="home-stat-lbl">Minutes</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-val">1.3</div>
+        <div class="home-stat-lbl">Miles</div>
+      </div>
+    </div>
+
+    <a href="https://www.planetwimborne.org" target="_blank" rel="noopener" class="home-planet" style="text-decoration:none">
+      <div class="home-planet-icon">🌿</div>
+      <div class="home-planet-text">
+        <strong>Supported by Planet Wimborne</strong><br>
+        This trail celebrates heritage and encourages time in our beautiful environment for wellbeing and community connection.
+      </div>
+      <span style="font-size:14px;color:rgba(255,255,255,0.35);flex-shrink:0">›</span>
+    </a>
+
+    <button class="btn-primary" onclick="showCarParkSelect()">🅿 Set Your Car Park &amp; Begin</button>
+    <button class="btn-secondary" onclick="showMap()">🗺 View Trail Map</button>
+    <p class="nfc-hint">Tap a Superspree RouteLoop device to jump to any stop</p>
+  </div>
+</div>
+
+<!-- ══ MAP ══ -->
+<div id="screen-map" class="screen">
+  <div class="map-header">
+    <button class="icon-btn" onclick="showHome()">←</button>
+    <div class="map-title">
+      <h2>Heritage Trail Map</h2>
+      <p>13 stops · Tap any marker to explore</p>
+    </div>
+    <button class="icon-btn" onclick="showCarParkSelect()" style="background:rgba(200,146,42,0.3);color:#E8B84B">🅿</button>
+  </div>
+  <div id="map-container">
+    <div id="leaflet-map"></div>
+    <div class="map-legend">
+      <div class="legend-items">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Heritage stop</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2563eb;border-radius:3px"></div> Car park</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NFC LANDING ══ -->
+<div id="screen-nfc" class="screen" onclick="proceedFromNfc()">
+  <div class="nfc-bg-ring"></div>
+  <div class="nfc-bg-ring-2"></div>
+  <div class="nfc-pill"><span>📡</span><span>RouteLoop NFC Connected</span></div>
+  <div class="nfc-scan-anim" id="nfc-icon">🏛️</div>
+  <div class="nfc-you-are">You are now at</div>
+  <div class="nfc-location-name" id="nfc-location-name">Loading…</div>
+  <div class="nfc-location-meta" id="nfc-location-meta"></div>
+  <div class="nfc-location-addr" id="nfc-location-addr"></div>
+  <div class="nfc-type-badge" id="nfc-type-badge">Heritage Stop</div>
+  <div class="nfc-progress-ring-wrap">
+    <svg class="nfc-progress-ring" width="56" height="56" viewBox="0 0 56 56">
+      <circle class="nfc-progress-ring-bg" cx="28" cy="28" r="22"/>
+      <circle class="nfc-progress-ring-fg" id="nfc-ring" cx="28" cy="28" r="22"/>
+    </svg>
+  </div>
+  <div class="nfc-tap-hint">Tap anywhere to continue</div>
+  <button class="nfc-btn-now" onclick="proceedFromNfc()">Continue →</button>
+  <div class="nfc-wtoc-row">
+    <div class="nfc-wtoc-mini">
+      <div class="nfc-wtoc-mini-yr">2026</div>
+      <div class="nfc-wtoc-mini-txt">WMB<br>HIST<br>TRAIL</div>
+    </div>
+    <span class="nfc-wtoc-label">Wimborne Historic Town Trail</span>
+  </div>
+</div>
+
+<!-- ══ SITE ══ -->
+<div id="screen-site" class="screen">
+  <div class="return-bar hidden" id="return-bar" onclick="showReturnToCar()">
+    <span class="return-bar-text" id="return-bar-text">🅿 Return to Car Park</span>
+    <button class="return-bar-action">Directions</button>
+  </div>
+  <div class="site-topbar">
+    <button class="icon-btn" onclick="showMap()">🗺</button>
+    <div class="site-num" id="site-badge">1</div>
+    <div class="site-topbar-info">
+      <h2 id="site-topbar-name">Site Name</h2>
+      <p id="site-topbar-sub">Stop 1 of 13 · Heritage Trail</p>
+    </div>
+  </div>
+  <div class="progress-track" id="progress-track"></div>
+  <div class="site-scroll" id="site-scroll">
+    <div class="site-hero">
+      <div class="site-hero-num-badge" id="site-hero-num-badge">Stop 1 of 13</div>
+      <span class="site-hero-icon" id="site-hero-icon">🏛️</span>
+      <div class="site-hero-name" id="site-hero-name">Site Name</div>
+      <div class="site-hero-addr" id="site-hero-addr">Address</div>
+      <div id="site-plaque-badge"></div>
+    </div>
+    <div class="site-body" id="site-body"></div>
+  </div>
+</div>
+
+<!-- ══ CAR PARK SCREEN ══ -->
+<div id="screen-carpark" class="screen">
+  <div class="cp-screen-header">
+    <button class="icon-btn" onclick="showHome()">←</button>
+    <h2 id="cp-screen-name">Car Park</h2>
+  </div>
+  <div class="cp-screen-scroll" id="cp-screen-scroll"></div>
+</div>
+
+<!-- ══ COMPLETE ══ -->
+<div id="screen-complete" class="screen">
+  <div class="complete-icon">🏅</div>
+  <h2 class="complete-headline">Trail<br><span class="hl">Complete!</span></h2>
+  <p class="complete-sub">You have walked in the footsteps of kings, smugglers, poets, and reformers. Wimborne's history is alive in you now.</p>
+  <div class="complete-awe-box">
+    <div class="complete-awe-label">A thought to carry home</div>
+    <p class="complete-awe-para">"The past is not behind us — it is beneath our feet, woven into every stone and street we walk."</p>
+  </div>
+  <div class="complete-stats">
+    <div class="complete-stat"><div class="complete-stat-val">13</div><div class="complete-stat-lbl">Stops</div></div>
+    <div class="complete-stat"><div class="complete-stat-val">1,300</div><div class="complete-stat-lbl">Years</div></div>
+    <div class="complete-stat"><div class="complete-stat-val">~90</div><div class="complete-stat-lbl">Minutes</div></div>
+  </div>
+  <button class="btn-primary" onclick="showHome()" style="max-width:320px;margin-bottom:10px">🏠 Return to Start</button>
+  <button class="btn-secondary" onclick="showMap()" style="max-width:320px">🗺 View Trail Map</button>
+</div>
+
+<!-- ══ RETURN TO CAR OVERLAY ══ -->
+<div class="return-overlay" id="return-overlay" onclick="closeReturnOverlay(event)">
+  <div class="return-sheet" id="return-sheet">
+    <div class="return-sheet-handle"></div>
+    <h3>Return to Car Park</h3>
+    <p class="return-sheet-sub" id="return-sheet-sub">Directions back to your car</p>
+    <div class="ret-steps" id="ret-steps"></div>
+    <button class="btn-primary" style="margin-top:14px" onclick="closeReturnOverlay()">Got it ✓</button>
+  </div>
+</div>
+
+<!-- ══ CAR PARK SELECTOR ══ -->
+<div class="cp-overlay" id="cp-overlay" onclick="closeCpOverlay(event)">
+  <div class="cp-sheet">
+    <div class="cp-handle"></div>
+    <h3>Choose Your Car Park</h3>
+    <p class="cp-sheet-sub">We'll remember your parking spot throughout the trail</p>
+    <div class="cp-list" id="cp-list"></div>
+    <button class="cp-confirm-btn" id="cp-confirm-btn" disabled onclick="confirmCarPark()">Start Trail from Stop 1 →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA — 13 HERITAGE STOPS
+// ═══════════════════════════════════════════════════════════
+
+const SITES = [
+  {
+    id: 1,
+    name: 'First Wesleyan Methodist Church',
+    shortName: 'Methodist Chapel',
+    address: 'West Row (NW corner of Corn Market), Wimborne BH21',
+    icon: '⛪',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 1',
+    lat: 50.8006, lng: -1.9928,
+    awe_quote: 'From a hired house in West Borough to a chapel that inspired thousands — sometimes the most transformative movements begin in the smallest rooms.',
+    content: `<p>The green plaque is on the brick building at the <strong>north-west corner of the former Corn Market, in West Row</strong> — next to the White Hart pub. This is the site of the <strong>first purpose-built Wesleyan Methodist Church</strong> in Wimborne, erected in 1820 and originally called the <em>Ebenezer Chapel</em>.</p>
+    <p>The story begins with <strong>John Parsons</strong>, who rented a house in West Borough for worship in the late 1700s — until angry local residents broke every window and forced the small congregation out of town. Undeterred, they met in Colehill, then returned when <strong>Peter Hawke</strong> and <strong>Joseph Sims</strong> rebuilt the community from scratch after 1801.</p>
+    <p>By 1820 the society had outgrown its meeting house. Thanks largely to the generosity of Sims and his brother-in-law <strong>John Meatyard</strong> (who died before seeing it completed), the new brick chapel 'Ebenezer' rose in the Corn Market. Remodelled in 1846, it later became a Masonic Hall, then arguably the <strong>town's first cinema</strong>, and a Salvation Army citadel. The great <strong>William Booth</strong>, founder of the Salvation Army, conducted evangelistic meetings here in the early 1900s.</p>`,
+    did_you_know: 'William Booth, who founded the Salvation Army in 1865, personally conducted evangelical meetings in this very building. His organisation now serves over 130 countries worldwide.',
+    links: [
+      { label: 'Wimborne Methodist Church', url: 'https://www.wimbornemethodist.org.uk/' },
+      { label: 'Wimborne History Trail', url: 'https://www.wimbornehistorytrail.uk/john-wesley.html' }
+    ],
+    directions: [
+      { step: 'From West Row, walk south along Grammar School Lane', detail: 'The lane runs south from the Corn Market alongside the old school grounds', dist: '~100m' },
+      { step: 'Arrive at the Old Free Grammar School', detail: 'The green plaque is on a brick column in Grammar School Lane, adjacent to the former school building', dist: '' }
+    ]
+  },
+  {
+    id: 2,
+    name: 'Old Free Grammar School',
+    shortName: 'Grammar School',
+    address: 'Grammar School Lane, Wimborne BH21 1EW',
+    icon: '📚',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 2',
+    lat: 50.7997, lng: -1.9928,
+    awe_quote: 'Lady Margaret Beaufort — mother of a king — planted a seed of free learning here in 1497. Five centuries later, thousands still follow the path she opened.',
+    content: `<p>The imposing <strong>Tudor Revival building</strong> before you was completed in 1851 on the site of one of Dorset's oldest schools. But its story begins much earlier, with one of the most powerful women of the medieval world.</p>
+    <p><strong>Lady Margaret Beaufort</strong>, mother of King Henry VII, included in her will of 1497 a provision that a chantry priest in Wimborne should <em>"teach Grammar freely to all who come thereto"</em> — a remarkable act of free education for its time. After the chantries were suppressed by Edward VI, the school fell into difficulty, until <strong>Queen Elizabeth I</strong> granted a new charter in 1563. She renamed it <em>Queen Elizabeth's Free Grammar School</em> — a name it proudly carried for centuries.</p>
+    <p>The school's most famous pupil is believed to be <strong>Matthew Prior</strong> (1664–1721), poet and diplomat, who studied here as a boy. The school's curriculum once included Greek, Latin — and famously, cockfighting in the 18th century!</p>`,
+    did_you_know: 'The school was originally funded by tithes from Lady Margaret Beaufort\'s estate. She was grandmother of Henry VIII and one of the most educated women in 15th-century England.',
+    links: [
+      { label: 'QE School Wimborne', url: 'https://www.queenelizabeths.com/' },
+      { label: 'Lady Margaret Beaufort (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Lady_Margaret_Beaufort' }
+    ],
+    directions: [
+      { step: 'From Grammar School Lane, head south-west along the path', detail: 'Follow the lane and cross towards St Margaret\'s Hill', dist: '~150m' },
+      { step: 'Arrive at Lady Exeter\'s Almshouses', detail: 'The almshouses and chapel are on the left at the foot of St Margaret\'s Hill — look for the green plaque on the chapel wall', dist: '' }
+    ]
+  },
+  {
+    id: 3,
+    name: "Lady Exeter's Almshouses",
+    shortName: "St Margaret's Almshouses",
+    address: "St Margaret's Hill, Wimborne BH21 1JH",
+    icon: '🏘️',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 3',
+    lat: 50.7990, lng: -1.9920,
+    awe_quote: "These cottages have stood for over 400 years, on ground that was first a leper hospital in the 13th century. Each generation left it better than they found it.",
+    content: `<p>At the foot of <strong>St Margaret's Hill</strong>, this cluster of almshouses and their ancient chapel form one of the most quietly moving spots in Wimborne. The site has been a place of care and refuge for over <strong>700 years</strong>.</p>
+    <p>The chapel occupies the site of a <strong>13th-century leper hospital</strong> — one of many founded across England as leprosy spread during the Crusades. As the disease faded, the hospital was converted to almshouses to shelter Wimborne's poorest residents. The <em>Marchioness of Exeter</em> is commemorated here — her memorial tomb is inside the Minster nearby, linking these almshouses to one of Wimborne's great medieval families.</p>
+    <p>The almshouses were also endowed by <strong>William Stone</strong>, a 17th-century Minister of the Minster who gave his own library to the church chained library and funded charitable housing for the poor. Inside the tiny chapel, <strong>bare stone walls, fading medieval wall paintings, a holy water stoup</strong> and simple seating survive — a place of remarkable stillness in the heart of a busy market town.</p>`,
+    did_you_know: "The chapel is one of the most primitive small sacred spaces in Dorset — its medieval wall paintings and holy water stoup are rarely matched for age or atmosphere. The leper hospital here dates from a time when there were over 300 such hospitals in England.",
+    links: [
+      { label: 'Wimborne Minster History', url: 'https://www.wimborneminster.org.uk' }
+    ],
+    directions: [
+      { step: 'Head north up St Margaret\'s Hill', detail: 'Walk up the hill back towards the town centre', dist: '~150m' },
+      { step: 'Join the High Street and turn right (east)', detail: 'Walk along the High Street towards the Minster', dist: '~150m' },
+      { step: 'Arrive at The Albion Inn', detail: 'On your left, next to the Museum of East Dorset and opposite the Minster\'s twin towers', dist: '' }
+    ]
+  },
+  {
+    id: 4,
+    name: 'The Albion Inn',
+    shortName: 'The Albion Inn',
+    address: 'High Street, Wimborne BH21 1HR',
+    icon: '🍺',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 4',
+    lat: 50.7999, lng: -1.9902,
+    awe_quote: "This inn has witnessed more history than any history book could hold — four coaching inns once served this High Street, and The Albion, the oldest surviving, is still standing.",
+    content: `<p><strong>The Albion Inn</strong> on the High Street — now trading as <em>1777 The Albion</em> — dates from the <strong>17th century</strong>, when it was one of four coaching inns serving Wimborne. In those days it was called the <em>New Inn</em>. Of those four inns, only two survive today.</p>
+    <p>The pub is positioned directly opposite the twin towers of the Minster, next to the <strong>Museum of East Dorset</strong> (formerly Priest's House Museum). In July 2009, fire broke out in the adjacent buildings — Martin's newsagents, a travel agent, and a Thomas Cook shop were all damaged — but the museum <strong>narrowly escaped disaster</strong>, and The Albion survived as it has survived so much else.</p>
+    <p>The High Street here has been the commercial spine of Wimborne for over a thousand years. Markets, fairs, traders, and travellers have moved along this very pavement from the medieval period to today. Look across to the Minster's twin towers: the Norman stonework you see has stood for over 800 years.</p>`,
+    did_you_know: "The Albion dates from 1777 (hence its current trading name), making it one of the oldest continually operating hostelries in Wimborne. The town's Friday market — dating back to at least the 12th century — would have brought a weekly flood of traders past this very door.",
+    links: [
+      { label: 'Museum of East Dorset', url: 'https://www.museumofeastdorset.co.uk/' }
+    ],
+    directions: [
+      { step: 'Stay on the High Street heading west', detail: 'The Priest\'s House Museum / Museum of East Dorset is just steps away, also on the High Street', dist: '~30m' },
+      { step: 'Arrive at the Museum of East Dorset', detail: 'The Grade II* listed building is directly opposite the Minster', dist: '' }
+    ]
+  },
+  {
+    id: 5,
+    name: "Matthew Prior's Birthplace",
+    shortName: "Matthew Prior's Birthplace",
+    address: 'High Street area, Wimborne BH21',
+    icon: '✒️',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 5',
+    lat: 50.8001, lng: -1.9908,
+    awe_quote: 'A joiner\'s son from Wimborne dined with kings, negotiated treaties, and became one of the finest English poets of his age — all because an earl noticed him reading Horace in a tavern.',
+    content: `<p><strong>Matthew Prior</strong> (1664–1721) was born here in Wimborne, the son of a joiner. His father died when Matthew was young, and he was sent to live with an uncle who kept a tavern in London. There, by remarkable chance, <strong>Charles Sackville, Earl of Dorset</strong> found the young Prior reading Horace in the back room — and was so impressed that he sponsored his education at Westminster School and St John's College, Cambridge.</p>
+    <p>Prior rose to become one of the most celebrated English poets and diplomats of his age. He was present at the negotiations for the <strong>Treaty of Ryswick (1697)</strong> and the <strong>Treaty of Utrecht (1713)</strong>, which ended the War of Spanish Succession. His works include witty satirical verse, love poems, and the epic <em>Solomon on the Vanity of the World</em>.</p>
+    <p>There is a charming story that while a student at the Minster's chained library, Prior fell asleep reading a first-edition copy of <strong>Sir Walter Raleigh's History of the World</strong> — and his candle burned through 104 pages. Every single page was neatly repaired, with the text reproduced on both sides of the patch.</p>`,
+    did_you_know: "The phrase 'Mat's Peace' was coined in France to describe the Treaty of Utrecht, a tribute to Matthew Prior's diplomatic skill. He was imprisoned for two years by the Whigs after Queen Anne's death, but his collected works earned him £4,000 on publication — enough to retire in comfort.",
+    links: [
+      { label: 'Matthew Prior (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Matthew_Prior' }
+    ],
+    directions: [
+      { step: 'Continue along the High Street', detail: 'Walk a few steps west — Allendale House is just along the High Street', dist: '~60m' }
+    ]
+  },
+  {
+    id: 6,
+    name: 'Allendale House',
+    shortName: 'Allendale House',
+    address: 'The Square / High Street, Wimborne BH21 1JN',
+    icon: '🏛️',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 6',
+    lat: 50.8005, lng: -1.9918,
+    awe_quote: "From this house, a Wimborne solicitor conceived and built the first railway in Dorset — connecting this market town to Southampton, London, and the world.",
+    content: `<p><strong>Allendale House</strong> was the home and office of <strong>Charles Castleman</strong>, the Wimborne solicitor who promoted and built the first railway in Dorset. The <strong>first railway station in Dorset</strong>, opened in 1847, was built specifically to serve Wimborne — because Castleman insisted the line pass through his town. The route between Southampton and Dorchester wound so extensively to include Wimborne that it became known as <em>"Castleman's Corkscrew."</em></p>
+    <p>The house was built in <strong>1823</strong> and sits on the River Allen, after which it is named. It is now used as offices, but its elegance reflects the prosperity of the Castleman family who shaped the town's Victorian development.</p>
+    <p>An early account of the Wimborne Workhouse notes that outdoor toilets once discharged directly into the river behind Allendale House — causing such complaint that they were moved, though without any understanding of the link between contaminated water and the typhoid outbreaks that recurred in 19th-century Wimborne.</p>`,
+    did_you_know: "Charles Castleman's Corkscrew line eventually became part of the London & South Western Railway. At its peak, Wimborne Station saw 57 trains a day passing through. The station closed to passengers in 1964 — you'll visit its site later on this trail.",
+    links: [
+      { label: 'Wimborne Town Council', url: 'https://www.wimborne.gov.uk' }
+    ],
+    directions: [
+      { step: 'Continue west along the High Street', detail: 'Look for Deans Court Lane on the right, just past the museum', dist: '~100m' },
+      { step: 'The Parish Workhouse site is nearby on East Borough', detail: 'Head north-east from the High Street towards East Borough', dist: '~150m' }
+    ]
+  },
+  {
+    id: 7,
+    name: 'Parish Workhouse',
+    shortName: 'Parish Workhouse',
+    address: 'East Borough (site of Allen Court), Wimborne BH21',
+    icon: '🏚️',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 7',
+    lat: 50.8010, lng: -1.9895,
+    awe_quote: 'To stand where the workhouse stood is to feel the weight of an entire social history — of poverty, resilience, and the hard fight for a more compassionate society.',
+    content: `<p>This site on <strong>East Borough</strong> — now occupied by <strong>Allen Court</strong> — is where Wimborne's <strong>Parish Workhouse</strong> stood from around 1750. The Dorset Heritage records confirm it was built at a cost of £1,336, with 18 rooms and an imposing iron-studded front door and lamp. It was demolished in 1958.</p>
+    <p>The workhouse site adjoined the garden of Allendale House, and life inside was deliberately harsh. After the <strong>Poor Law Amendment Act of 1834</strong>, conditions were legally required to be worse than those in the surrounding community. In 1835, a report found the Master drunk and absent — returning at midnight intoxicated. Yet the records also show genuine acts of care: orphans were looked after, young people were apprenticed, and families who couldn't survive on agricultural wages of 3–6 shillings a week found a last resort here.</p>
+    <p>By the 19th century the workhouse served multiple parishes across East Dorset, and the <strong>Wimborne and Cranborne Union Workhouse</strong> (as it was later known) was enlarged in 1836 with wings, a chapel, and a schoolroom. It was later called <em>Allen House</em> before its demolition.</p>`,
+    did_you_know: "In 1800, teenage boys from Wimborne Workhouse were apprenticed to merchants in Newfoundland, Canada — meaning children from this very site crossed the Atlantic to start new lives. Their journeys were recorded in careful parish account books that survive today.",
+    links: [
+      { label: 'History of Wimborne Workhouse', url: 'https://www.wimbornehistorytrail.uk/The_History_of_Wimborne_Workhouse-Janet-Seal.pdf' }
+    ],
+    directions: [
+      { step: 'Walk south from East Borough towards the High Street', detail: 'Head back into the town centre, keeping the Minster towers ahead of you', dist: '~250m' },
+      { step: 'Arrive at the Priest\'s House Museum', detail: 'At 23–27 High Street, directly opposite the Minster — the Grade II* listed building with bow-fronted windows', dist: '' }
+    ]
+  },
+  {
+    id: 8,
+    name: "Priest's House Museum",
+    shortName: "Priest's House Museum",
+    address: '23–27 High Street, Wimborne BH21 1HR',
+    icon: '🏠',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 8',
+    lat: 50.7998, lng: -1.9906,
+    awe_quote: "A 16th-century house that has been an ironmonger's, a stationer's, and now a window into 500 years of ordinary life — preserved by one woman's extraordinary love of her town.",
+    content: `<p>The <strong>Priest's House Museum</strong> — now the <em>Museum of East Dorset</em> — occupies one of the oldest surviving houses in Wimborne, its oldest stonework dating to the early <strong>16th century</strong>. Despite its name, there is no evidence a priest ever lived here. The name first appeared on an Ordnance Survey map only in 1889.</p>
+    <p>For much of the 19th and 20th centuries it was an <strong>ironmonger's shop</strong> run by the Coles family. <strong>Tom Coles</strong> took it over from his father in 1899, and his daughter <strong>Hilda</strong> was born in the house in 1907. When she inherited it in 1953, she closed the shop — and spent her remaining years transforming it into a museum. When she died in 1987, she left the entire building to the town.</p>
+    <p>Highlights include the <strong>Victorian kitchen</strong> with a working Beetonette range, a recreated ironmonger's shop (with original Victorian stock intact), a <strong>Roman room</strong> with wall paintings from a Tarrant Hinton villa, and one of the UK's most remarkable <strong>collections of Victorian Valentine cards</strong> — including some with decidedly unsentimental messages.</p>`,
+    did_you_know: "When John Low closed his stationery business in the building in 1872, he gave the eccentric instruction that the shop was to be boarded up and untouched until his death. When he died thirty years later, Tom Coles found the original Victorian stock perfectly preserved — still in the museum today.",
+    links: [
+      { label: 'Museum of East Dorset', url: 'https://www.museumofeastdorset.co.uk/' }
+    ],
+    directions: [
+      { step: 'From the museum, turn left (west) along the High Street', detail: 'Walk past the Minster and bear left onto West Borough', dist: '~200m' },
+      { step: 'Continue along West Borough for about 400 metres', detail: 'Pass the Corn Market, White Hart, and carry on west — the Tivoli\'s Art Deco façade is on your left', dist: '~400m' }
+    ]
+  },
+  {
+    id: 9,
+    name: 'Tivoli Theatre',
+    shortName: 'Tivoli Theatre',
+    address: '21 West Borough, Wimborne BH21 1LT',
+    icon: '🎭',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 9',
+    lat: 50.8015, lng: -1.9950,
+    awe_quote: "Threatened with demolition and brought back from the brink by a community who refused to let it go — the Tivoli is Wimborne's testament to what people can save when they stand together.",
+    content: `<p>Built in <strong>1936</strong> with beautiful Art Deco features, the Tivoli was designed as a combined theatre and cinema. For decades it was the cultural centre of Wimborne — until the 1970s, when plans were announced to demolish it for redevelopment.</p>
+    <p>A passionate community campaign saved it. After years of determined effort, the Tivoli reopened in <strong>1993</strong> as an independent, community-owned charity venue. It now hosts films, theatre, comedy, live music, and community events — a living example of what collective will can achieve.</p>
+    <p>The theatre has welcomed <strong>remarkable performers</strong> over the decades: among them <strong>Bob Geldof</strong>, <strong>Robert Plant</strong> of Led Zeppelin, <strong>Ronnie Wood</strong> and <strong>Charlie Watts</strong> of The Rolling Stones, and <strong>Carl Palmer</strong> of ELP. Wimborne's own <strong>Electric Wizard</strong> played their last local gig here in 1998.</p>`,
+    did_you_know: "The Tivoli is a registered charity and relies on community support to survive. When it was threatened with demolition in 1979, local people organised one of Dorset's most successful heritage campaigns. It has been saved twice — once by the community, and once from a 2009 fire.",
+    links: [
+      { label: 'Tivoli Theatre Wimborne', url: 'https://www.tivoliwimborne.co.uk/' }
+    ],
+    directions: [
+      { step: 'Continue west along West Borough', detail: 'Walk a short distance past the Tivoli', dist: '~150m' },
+      { step: 'Gulliver\'s House is at No. 45 West Borough on your right', detail: 'Look for the distinctive period house', dist: '' }
+    ]
+  },
+  {
+    id: 10,
+    name: "Gulliver's House",
+    shortName: "Gulliver's House",
+    address: '45 West Borough (west side, near Priors Walk), Wimborne BH21 1LU',
+    icon: '⚓',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 10',
+    lat: 50.8022, lng: -1.9963,
+    awe_quote: "He commanded fifteen smuggling vessels, controlled 200 miles of coastline, faked his own death to escape customs officers — and ended his days as a respected churchwarden of Wimborne Minster.",
+    content: `<p>This house was the retirement home of <strong>Isaac Gulliver</strong> (c.1745–1822), known throughout Dorset as the <em>"King of the Smugglers"</em> and <em>"the Gentle Smuggler who never killed a man."</em></p>
+    <p>At the height of his career, Gulliver commanded <strong>fifteen luggers</strong>, running gin, silk, lace, and tea from France and the Channel Islands into Poole Bay. His network of men — the <em>"White Wigs"</em>, who whitened their hair and wore smock-frocks as a disguise — controlled the coastline from Lymington to Torbay. He owned purpose-built smuggling strongholds, planted <strong>clumps of trees on hilltops</strong> as navigation aids for his ships, and reputedly once escaped customs officers by covering his face in white powder and lying in an open coffin.</p>
+    <p>In 1782, taking the Royal Pardon for smuggling, Gulliver reinvented himself as a respectable <strong>wine merchant and banker</strong>. He moved to this house in 1817 and died here in 1822, leaving an estate of £60,000 and properties across four counties. He was buried — with full ceremony — in Wimborne Minster, where he had served as a churchwarden.</p>`,
+    did_you_know: "During Gulliver's time as churchwarden at Wimborne Minster, there is no record of any payment being made for sacramental wine. A quietly remarkable coincidence.",
+    links: [
+      { label: 'Isaac Gulliver (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Isaac_Gulliver' }
+    ],
+    directions: [
+      { step: 'Continue west along West Borough', detail: 'Head towards Victoria Road', dist: '~300m' },
+      { step: 'Turn right onto Victoria Road', detail: 'The Victoria Hospital is on your left', dist: '~200m' }
+    ]
+  },
+  {
+    id: 11,
+    name: 'Victoria Hospital',
+    shortName: 'Victoria Hospital',
+    address: 'Victoria Road, Wimborne BH21 1EN',
+    icon: '🏥',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 11',
+    lat: 50.8012, lng: -1.9978,
+    awe_quote: "Built in 1887 to mark Queen Victoria's Golden Jubilee — a town's gift of healing to its community, which still serves Wimborne as a Minor Injuries Unit today.",
+    content: `<p>The <strong>Victoria Hospital</strong> was built in 1887 to commemorate the <strong>Golden Jubilee of Queen Victoria</strong>, funded through a public subscription drive led by prominent Wimborne citizens. It was a remarkable civic gift — a community coming together to create a permanent legacy of care for their town.</p>
+    <p>Before the National Health Service, the hospital was funded by voluntary subscription, charitable donations, and the contributions of those it served. The records show a Victorian town acutely aware of its social responsibilities — and willing to pay for them collectively.</p>
+    <p>The building still stands and today operates as the <strong>Victoria Hospital Minor Injuries Unit</strong> — one of the few Victorian jubilee hospitals still performing its original function. From the first patients treated in 1887 to today's visitors, it represents an unbroken thread of community healthcare spanning nearly 140 years.</p>`,
+    did_you_know: "Queen Victoria's Golden Jubilee in 1887 inspired a wave of civic generosity across Britain. Hospitals, parks, halls, and clocktowers were dedicated to her across the country — Victoria Hospital Wimborne is among the survivors still serving their original purpose.",
+    links: [
+      { label: 'Victoria Hospital Minor Injuries', url: 'https://www.dorsethealthcare.nhs.uk/patients-and-visitors/our-services-and-locations/wimborne-community-hospital' }
+    ],
+    directions: [
+      { step: 'From Victoria Road, head south past the hospital', detail: 'Walk south down Victoria Road, turning right onto Poole Road', dist: '~300m' },
+      { step: 'Turn left onto Station Road', detail: 'Walk to the end of Station Road — the plaque for the old railway station is at the far end', dist: '~300m' }
+    ]
+  },
+  {
+    id: 12,
+    name: 'Site of Wimborne Railway Station',
+    shortName: 'Old Station Site',
+    address: 'Station Road, Wimborne BH21 1QA',
+    icon: '🚂',
+    plaque: 'green',
+    plaque_label: 'Green Plaque 12',
+    lat: 50.7980, lng: -1.9875,
+    awe_quote: "The first railway station in Dorset stood here. Trains ran for 130 years. Now only a plaque, an embankment, and a few iron rods in the undergrowth remain — and the weekly market built on its goods yard.",
+    content: `<p>The green plaque marks the site of what was not just Wimborne's station, but the <strong>first railway station ever built in Dorset</strong>, opened in June <strong>1847</strong> — promoted by <strong>Charles Castleman of Allendale House</strong>, whom you met earlier on this trail.</p>
+    <p>At its Victorian peak, <strong>57 trains a day</strong> stopped here and passengers could depart in five different directions. The <em>Castleman Corkscrew</em> line wound so extensively through Dorset to include Wimborne that it was nicknamed for its curves. The station had a large goods yard; when that closed, the site became the <strong>Wimborne Market</strong> — still held here weekly today.</p>
+    <p>The station closed to passengers in <strong>1964</strong> under the Beeching cuts, and the final goods trains ran in <strong>May 1977</strong>. The station buildings were demolished and an industrial unit built on the site. Walk to the end of Station Road and you'll find the <strong>commemorative plaque</strong>. Look opposite — a tree-lined section of the old railway embankment survives, and in the undergrowth you can still find the <strong>iron rodding that once controlled the signals</strong>.</p>`,
+    did_you_know: "At its peak, a passenger could travel from Wimborne to Bournemouth, Southampton, Salisbury, Bath, and the Midlands — all via trains from this station. Wimborne was a true Victorian railway junction. The Beeching Report of 1963 ended that era in a single document.",
+    links: [
+      { label: 'Castleman\'s Corkscrew Railway', url: 'https://tessofthevale.com/2024/02/09/dorset-railways/#:~:text=In%201844%20Wimborne%20solicitor%20Charles,line%20to%20Dorchester%20at%20Crossways.' },
+      { label: 'Wimborne Station (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Wimborne_railway_station' }
+    ],
+    directions: [
+      { step: 'From the station site, head south-east down Station Road', detail: 'Continue until you reach Poole Road, then turn left', dist: '~300m' },
+      { step: 'Walk along Poole Road / Avenue Road', detail: 'No. 16 Avenue Road (Llanherne) is on the right — look for the National Blue Plaque on the house', dist: '~300m' }
+    ]
+  },
+  {
+    id: 13,
+    name: "Thomas Hardy's House — Llanherne",
+    shortName: "Hardy's House, Llanherne",
+    address: '16 Avenue Road, Wimborne BH21 1BS',
+    icon: '📖',
+    plaque: 'blue',
+    plaque_label: "Wimborne's only National Blue Plaque",
+    lat: 50.7968, lng: -1.9842,
+    awe_quote: "In this quiet Wimborne house, Thomas Hardy wrote one of his most ambitious novels — and looked from his window at a night sky that stretched to infinity and shrank his troubles to nothing.",
+    content: `<p>This is <strong>Llanherne</strong>, 16 Avenue Road — where <strong>Thomas Hardy</strong> (1840–1928) lived from 1881 to 1883 with his first wife Emma. The blue plaque here is <strong>Wimborne's only National Blue Plaque</strong> — the scheme administered by English Heritage to mark places of national historic significance. It is a private house; please respect the residents.</p>
+    <p>Hardy was in his early forties, already celebrated for <em>Far from the Madding Crowd</em> and <em>The Return of the Native</em>, when he came to Wimborne. Here he wrote his ninth novel, <strong><em>Two on a Tower</em></strong> (1882) — a remarkable work in which a young astronomer falls in love while studying the heavens from a Dorset column. Hardy described it as an attempt to set the emotional history of two lives against <em>"the stupendous background of the stellar universe."</em></p>
+    <p>Hardy visited <strong>Locks the barber</strong> on the High Street for his haircuts — the chair he sat in is now in the Priest's House Museum you passed earlier. He recalled Wimborne in verse throughout his later life: <em>"I used to pass... I'm loth to reckon when."</em> This quiet residential road was, briefly, home to one of the greatest English novelists who ever lived.</p>`,
+    did_you_know: "Two on a Tower is one of the most intellectually audacious Victorian novels — Hardy deliberately set a love story against the scale of the cosmos, to show how small human concerns appear against astronomical time and space. The concept came to him while living at this very house.",
+    links: [
+      { label: 'Thomas Hardy Society', url: 'https://www.hardysociety.org/' },
+      { label: 'Two on a Tower (Wikipedia)', url: 'https://en.wikipedia.org/wiki/Two_on_a_Tower' }
+    ],
+    directions: null  // final stop
+  }
+];
+
+// ═══════════════════════════════════════════════════════════
+//  CAR PARKS
+// ═══════════════════════════════════════════════════════════
+const CAR_PARKS = [
+  {
+    id: 'cp-cornmarket',
+    name: 'Crown Mead Car Park',
+    shortName: 'Crown Mead',
+    address: 'Crown Mead, Wimborne BH21 1JB',
+    lat: 50.8008, lng: -1.9935,
+    spaces: '~100 spaces · Pay & Display',
+    dist_to_trail: '2 min walk',
+    directions_to_start: [
+      { step: 'Exit Crown Mead Car Park and turn south', detail: 'Walk through the Crown Mead shopping area towards the Corn Market', dist: '~1 min' },
+      { step: 'Enter the Corn Market and walk to the north-west corner', detail: 'Green Plaque 1 is on the brick building in West Row, next to the White Hart pub', dist: '~2 min' }
+    ],
+    directions_back: [
+      { step: 'From the last stop, head north through the Corn Market', detail: 'The car park entrance is just north of the square', dist: '~3 min' }
+    ]
+  },
+  {
+    id: 'cp-king-street',
+    name: 'King Street Car Park',
+    shortName: 'King Street',
+    address: 'King Street, Wimborne BH21 1DZ',
+    lat: 50.7995, lng: -1.9935,
+    spaces: '~80 spaces · Pay & Display',
+    dist_to_trail: '5 min walk',
+    directions_to_start: [
+      { step: 'Exit King Street Car Park and turn right (north) onto King Street', detail: 'Walk north past the current Methodist Church on your right', dist: '~2 min' },
+      { step: 'Turn right at the top into West Row', detail: 'Walk east along West Row — Green Plaque 1 is on the brick building next to the White Hart pub, at the north-west corner of the Corn Market', dist: '~3 min' }
+    ],
+    directions_back: [
+      { step: 'From Avenue Road, head south-west through the town', detail: 'Walk via East Street towards King Street', dist: '~10 min' },
+      { step: 'Arrive at King Street Car Park on your left', detail: '', dist: '' }
+    ]
+  },
+  {
+    id: 'cp-allendale',
+    name: 'Allendale North Car Park',
+    shortName: 'Allendale North',
+    address: 'Allendale North, Wimborne BH21',
+    lat: 50.8028, lng: -1.9898,
+    spaces: '~70 spaces · Free',
+    dist_to_trail: '10 min walk',
+    directions_to_start: [
+      { step: 'Exit Allendale North Car Park', detail: 'Head west towards the town centre on Allenview Road', dist: '' },
+      { step: 'Continue west through the town centre', detail: 'Follow signs for Corn Market — the trail starts there', dist: '~10 min' }
+    ],
+    directions_back: [
+      { step: 'From Ave Road (Stop 13), head north-east', detail: 'Follow Avenue Road north, then Allenview Road east', dist: '~8 min' },
+      { step: 'Arrive at Allendale North Car Park', detail: '', dist: '' }
+    ]
+  },
+  {
+    id: 'cp-westfield',
+    name: 'Westfield Close Car Park',
+    shortName: 'Westfield Close',
+    address: 'Westfield Close, Wimborne BH21',
+    lat: 50.8012, lng: -1.9960,
+    spaces: '~60 spaces · Free',
+    dist_to_trail: '8 min walk',
+    directions_to_start: [
+      { step: 'Exit Westfield Close Car Park onto West Borough', detail: 'Turn right (east) along West Borough', dist: '' },
+      { step: 'Continue east towards the town centre', detail: 'Pass the Tivoli Theatre and walk to the Corn Market area', dist: '~8 min' }
+    ],
+    directions_back: [
+      { step: 'From Ave Road, head west along West Borough', detail: 'Pass Gulliver\'s House and the Tivoli Theatre', dist: '~10 min' },
+      { step: 'Turn right into Westfield Close', detail: 'Car park is at the end', dist: '' }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let map = null;
+let selectedCpId = null;
+let startCpId = null;
+let currentSiteId = null;
+
+function saveStartCp(id) {
+  startCpId = id;
+  try { sessionStorage.setItem('wht_start_cp', id); } catch(e){}
+}
+function loadStartCp() {
+  try { startCpId = sessionStorage.getItem('wht_start_cp') || null; } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ROUTING
+// ═══════════════════════════════════════════════════════════
+function getHashMode() {
+  const h = window.location.hash;
+  const sm = h.match(/^#site-(\d+)$/);
+  if (sm) return {type:'site', id:parseInt(sm[1])};
+  const cm = h.match(/^#carpark-(.+)$/);
+  if (cm) return {type:'carpark', id:cm[1]};
+  return null;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if(el) el.classList.add('active');
+}
+function showHome() { history.replaceState(null,'',window.location.pathname); showScreen('home'); }
+function showMap() { showScreen('map'); setTimeout(() => { if (!map) initMap(); else map.invalidateSize(); }, 80); }
+function showSite(id) {
+  const site = SITES.find(s => s.id === id);
+  if (!site) return;
+  currentSiteId = id;
+  history.replaceState(null,'','#site-'+id);
+  renderSite(site);
+  showScreen('site');
+  document.getElementById('site-scroll').scrollTo(0,0);
+}
+function showCarParkScreen(cpId) {
+  const cp = CAR_PARKS.find(c => c.id === cpId);
+  if (!cp) return;
+  history.replaceState(null,'','#carpark-'+cpId);
+  renderCarParkScreen(cp);
+  showScreen('carpark');
+}
+function showComplete() { showScreen('complete'); }
+
+// ═══════════════════════════════════════════════════════════
+//  CAR PARK SELECTOR
+// ═══════════════════════════════════════════════════════════
+function showCarParkSelect() {
+  renderCpList();
+  document.getElementById('cp-overlay').classList.add('open');
+}
+function closeCpOverlay(e) {
+  if (!e || e.target === document.getElementById('cp-overlay'))
+    document.getElementById('cp-overlay').classList.remove('open');
+}
+function renderCpList() {
+  const list = document.getElementById('cp-list');
+  list.innerHTML = '';
+  CAR_PARKS.forEach(cp => {
+    const el = document.createElement('div');
+    el.className = 'cp-item' + (cp.id === selectedCpId ? ' selected' : '');
+    el.innerHTML = `
+      <div class="cp-icon">P</div>
+      <div class="cp-info">
+        <h4>${cp.name}</h4>
+        <p>${cp.spaces}</p>
+      </div>
+      <div class="cp-dist">${cp.dist_to_trail}</div>`;
+    el.onclick = () => {
+      selectedCpId = cp.id;
+      document.querySelectorAll('.cp-item').forEach(i => i.classList.remove('selected'));
+      el.classList.add('selected');
+      const btn = document.getElementById('cp-confirm-btn');
+      btn.disabled = false;
+    };
+    list.appendChild(el);
+  });
+}
+function confirmCarPark() {
+  if (!selectedCpId) return;
+  saveStartCp(selectedCpId);
+  document.getElementById('cp-overlay').classList.remove('open');
+  showCarParkScreen(selectedCpId);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CAR PARK SCREEN
+// ═══════════════════════════════════════════════════════════
+function renderCarParkScreen(cp) {
+  document.getElementById('cp-screen-name').textContent = cp.name;
+  const scroll = document.getElementById('cp-screen-scroll');
+
+  let html = `<div class="cp-welcome-card">
+    <h3>🅿 Welcome from ${cp.shortName}</h3>
+    <p>Your parking spot is saved. At any point on the trail, tap the teal bar at the top of any stop screen for directions back to your car.</p>
+  </div>
+  <div class="cp-dir-card">
+    <h3>🚶 Walk to Trail Start (Stop 1)</h3>`;
+
+  cp.directions_to_start.forEach((s, i) => {
+    const isLast = i === cp.directions_to_start.length - 1;
+    html += `<div class="dir-step">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="dir-dot${isLast?' dest':''}">${isLast?'1':i+1}</div>
+        ${!isLast ? '<div class="dir-vline"></div>' : ''}
+      </div>
+      <div class="dir-text" style="flex:1;padding-top:4px">
+        <strong>${s.step}</strong>
+        <span>${s.detail}</span>
+        ${s.dist ? `<div class="dir-badge">📍 ${s.dist}</div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  html += `</div>
+  <button class="btn-primary" onclick="showSite(1)">▶ Begin the Heritage Trail (Stop 1)</button>
+  <button class="btn-map-link" onclick="showMap()" style="margin-top:8px">🗺 View Full Trail Map</button>`;
+
+  scroll.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RETURN TO CAR
+// ═══════════════════════════════════════════════════════════
+function showReturnToCar() {
+  if (!startCpId || !currentSiteId) return;
+  const cp = CAR_PARKS.find(c => c.id === startCpId);
+  if (!cp) return;
+  document.getElementById('return-sheet-sub').textContent = `Directions from Stop ${currentSiteId} to ${cp.name}`;
+
+  // Use general car park return directions (simplified)
+  const steps = cp.directions_back;
+  let html = '';
+  steps.forEach((s, i) => {
+    const isLast = i === steps.length - 1;
+    html += `<div class="dir-step">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="dir-dot${isLast?' dest':''}">${isLast?'🅿':i+1}</div>
+        ${!isLast?'<div class="dir-vline"></div>':''}
+      </div>
+      <div class="dir-text" style="flex:1;padding-top:4px">
+        <strong>${s.step}</strong>
+        <span>${s.detail}</span>
+        ${s.dist?`<div class="dir-badge">📍 ${s.dist}</div>`:''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('ret-steps').innerHTML = html;
+  document.getElementById('return-overlay').classList.add('open');
+}
+function closeReturnOverlay(e) {
+  if (!e || e.target === document.getElementById('return-overlay'))
+    document.getElementById('return-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SITE RENDERER
+// ═══════════════════════════════════════════════════════════
+function renderSite(site) {
+  // Topbar
+  document.getElementById('site-badge').textContent = site.id;
+  document.getElementById('site-topbar-name').textContent = site.name;
+  document.getElementById('site-topbar-sub').textContent = `Stop ${site.id} of ${SITES.length} · Heritage Trail`;
+
+  // Return bar
+  const retBar = document.getElementById('return-bar');
+  if (startCpId) {
+    const cp = CAR_PARKS.find(c => c.id === startCpId);
+    retBar.classList.remove('hidden');
+    document.getElementById('return-bar-text').textContent = `🅿 Return to ${cp ? cp.shortName + ' Car Park' : 'Car Park'}`;
+  } else {
+    retBar.classList.add('hidden');
+  }
+
+  // Progress track
+  const track = document.getElementById('progress-track');
+  track.innerHTML = '';
+  SITES.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'progress-dot' + (s.id < site.id ? ' done' : s.id === site.id ? ' active' : '');
+    track.appendChild(d);
+  });
+
+  // Hero
+  document.getElementById('site-hero-num-badge').textContent = `Stop ${site.id} of ${SITES.length}`;
+  document.getElementById('site-hero-icon').textContent = site.icon;
+  document.getElementById('site-hero-name').textContent = site.name;
+  document.getElementById('site-hero-addr').textContent = site.address;
+
+  // Plaque badge
+  const plaqueBadge = document.getElementById('site-plaque-badge');
+  if (site.plaque) {
+    plaqueBadge.innerHTML = `<div class="plaque-badge ${site.plaque}">${site.plaque === 'green' ? '🟢' : '🔵'} ${site.plaque_label}</div>`;
+  } else {
+    plaqueBadge.innerHTML = '';
+  }
+
+  // Body
+  let bodyHtml = '';
+
+  // Awe quote
+  if (site.awe_quote) {
+    bodyHtml += `<div class="awe-quote">
+      <div class="awe-quote-text">"${site.awe_quote}"</div>
+      <div class="awe-quote-attr">Heritage Trail · Stop ${site.id}</div>
+    </div>`;
+  }
+
+  // Main content
+  bodyHtml += `<div class="site-prose">${site.content}</div>`;
+
+  // Did you know
+  if (site.did_you_know) {
+    bodyHtml += `<div class="did-you-know">
+      <div class="dyk-label">💡 Did You Know?</div>
+      <div class="dyk-text">${site.did_you_know}</div>
+    </div>`;
+  }
+
+  // Links
+  if (site.links && site.links.length) {
+    bodyHtml += `<div class="site-links">`;
+    site.links.forEach(l => {
+      bodyHtml += `<a class="site-link" href="${l.url}" target="_blank" rel="noopener">
+        <span class="site-link-icon">🔗</span>
+        <span class="site-link-text">${l.label}</span>
+        <span class="site-link-arrow">›</span>
+      </a>`;
+    });
+    bodyHtml += `</div>`;
+  }
+
+  // Navigation
+  if (site.directions && site.id < SITES.length) {
+    const nextSite = SITES.find(s => s.id === site.id + 1);
+    bodyHtml += `<div class="nav-section">
+      <div class="nav-section-label">Walking to Stop ${site.id + 1}</div>
+      <div class="nav-steps">`;
+    site.directions.forEach((d, i) => {
+      const isLast = i === site.directions.length - 1;
+      bodyHtml += `<div class="nav-step">
+        <div class="nav-step-col">
+          <div class="nav-dot">${isLast ? (site.id+1) : (i+1)}</div>
+          ${!isLast ? '<div class="nav-vline"></div>' : ''}
+        </div>
+        <div class="nav-step-text">
+          <strong>${d.step}</strong>
+          <span>${d.detail}</span>
+          ${d.dist ? `<span class="nav-dist">📍 ${d.dist}</span>` : ''}
+        </div>
+      </div>`;
+    });
+    bodyHtml += `</div></div>`;
+
+    if (nextSite) {
+      bodyHtml += `<button class="btn-next" onclick="showSite(${nextSite.id})">
+        Continue to Stop ${nextSite.id}: ${nextSite.shortName} →
+      </button>`;
+    }
+  } else if (!site.directions) {
+    // Final stop
+    bodyHtml += `<div class="nav-section" style="text-align:center">
+      <div class="nav-section-label">You've reached the final stop</div>
+      <div style="font-size:28px;margin:12px 0">🏅</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.6">Congratulations — you have completed the Wimborne Historic Town Trail and walked through over 1,300 years of history.</div>
+    </div>
+    <button class="btn-next" onclick="showComplete()">🏆 Complete the Trail</button>`;
+  }
+
+  bodyHtml += `<button class="btn-map-link" onclick="showMap()">🗺 View Trail Map</button>`;
+
+  document.getElementById('site-body').innerHTML = bodyHtml;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════════════════════
+function initMap() {
+  map = L.map('leaflet-map', { zoomControl: true, scrollWheelZoom: true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+  map.setView([50.8005, -1.9920], 15);
+
+  // Heritage stop markers — gold circles with numbers
+  SITES.forEach(site => {
+    const icon = L.divIcon({
+      html: `<div style="
+        width:30px;height:30px;border-radius:50%;
+        background:linear-gradient(135deg,#C8922A,#E8B84B);
+        border:2px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-family:Georgia,serif;font-weight:700;font-size:13px;color:#1C1A14;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      ">${site.id}</div>`,
+      className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+    const m = L.marker([site.lat, site.lng], { icon }).addTo(map);
+    m.bindPopup(`
+      <strong style="font-family:Georgia,serif;font-size:14px;color:#1A4A40">${site.name}</strong>
+      <br><span style="font-size:11px;color:#666">${site.address}</span>
+      <br><span style="font-size:11px;color:#666">${site.plaque_label}</span>
+      <br><a href="#" onclick="showSite(${site.id});return false;"
+        style="display:inline-block;margin-top:6px;padding:5px 12px;
+        background:#1A4A40;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none">
+        View Stop ${site.id} →</a>
+    `);
+  });
+
+  // Car park markers — blue squares
+  CAR_PARKS.forEach(cp => {
+    const pIcon = L.divIcon({
+      html: `<div style="
+        width:26px;height:26px;border-radius:5px;
+        background:#2563eb;border:2px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-weight:800;font-size:13px;color:#fff;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      ">P</div>`,
+      className: '', iconSize: [26, 26], iconAnchor: [13, 13]
+    });
+    L.marker([cp.lat, cp.lng], { icon: pIcon }).addTo(map)
+      .bindPopup(`
+        <strong style="font-size:13px;color:#1e3a8a">${cp.name}</strong>
+        <br><span style="font-size:11px;color:#666">${cp.spaces}</span>
+        <br><a href="#" onclick="document.getElementById('cp-overlay').classList.remove('open');saveStartCp('${cp.id}');showCarParkScreen('${cp.id}');return false;"
+          style="display:inline-block;margin-top:6px;padding:4px 10px;background:#2563eb;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none">
+          Start from here →</a>
+      `);
+  });
+
+  // Draw trail line
+  const trailCoords = SITES.map(s => [s.lat, s.lng]);
+  L.polyline(trailCoords, { color: '#C8922A', weight: 3, opacity: 0.7, dashArray: '6,4' }).addTo(map);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NFC HANDLING
+// ═══════════════════════════════════════════════════════════
+let nfcTimer = null;
+let nfcProgress = 0;
+let nfcTargetSiteId = null;
+
+function showNfcScreen(siteId) {
+  const site = SITES.find(s => s.id === siteId);
+  if (!site) { showSite(siteId); return; }
+  nfcTargetSiteId = siteId;
+  document.getElementById('nfc-icon').textContent = site.icon;
+  document.getElementById('nfc-location-name').textContent = site.name;
+  document.getElementById('nfc-location-meta').textContent = `Stop ${site.id} of ${SITES.length}`;
+  document.getElementById('nfc-location-addr').textContent = site.address;
+  document.getElementById('nfc-type-badge').textContent = site.plaque_label || 'Heritage Stop';
+  showScreen('nfc');
+  startNfcCountdown();
+}
+
+function startNfcCountdown() {
+  nfcProgress = 0;
+  const ring = document.getElementById('nfc-ring');
+  const circumference = 2 * Math.PI * 22;
+  ring.style.strokeDasharray = circumference;
+  ring.style.strokeDashoffset = circumference;
+  clearInterval(nfcTimer);
+  nfcTimer = setInterval(() => {
+    nfcProgress += 1;
+    const offset = circumference - (nfcProgress / 40) * circumference;
+    ring.style.strokeDashoffset = Math.max(0, offset);
+    if (nfcProgress >= 40) { clearInterval(nfcTimer); proceedFromNfc(); }
+  }, 100);
+}
+function proceedFromNfc() {
+  clearInterval(nfcTimer);
+  if (nfcTargetSiteId) showSite(nfcTargetSiteId);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadStartCp();
+  const mode = getHashMode();
+  if (mode) {
+    if (mode.type === 'site') { showNfcScreen(mode.id); }
+    else if (mode.type === 'carpark') { showCarParkScreen(mode.id); }
+  } else {
+    showHome();
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const mode = getHashMode();
+  if (mode) {
+    if (mode.type === 'site') showSite(mode.id);
+    else if (mode.type === 'carpark') showCarParkScreen(mode.id);
+  }
+});
+</script>
+</body>
+</html>
